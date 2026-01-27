@@ -379,8 +379,7 @@ def verify_payload(msg, raw_sig, cert, ca_cert, verify_cert):
 
     # Extract the pkcs7 signature and the data
     if raw_sig:
-        raw_sig.strip()
-        sig = b"-----BEGIN PKCS7-----\n%s\n-----END PKCS7-----\n" % raw_sig.replace(b'\r\n', b'\n')
+        sig = b"-----BEGIN PKCS7-----\n%s\n-----END PKCS7-----\n" % raw_sig.strip().replace(b'\r\n', b'\n')
         p7 = SMIME.load_pkcs7_bio(BIO.MemoryBuffer(sig))
         data_bio = BIO.MemoryBuffer(msg)
     else:
@@ -388,10 +387,16 @@ def verify_payload(msg, raw_sig, cert, ca_cert, verify_cert):
 
     # Verify the signature against the message
     if verify_cert:
-        signer.verify(p7, data_bio)
+        if raw_sig:
+            signer.verify(p7, data_bio, SMIME.PKCS7_SIGNED)
+        else:
+            signer.verify(p7, data_bio)
     else:
         # Don't verify the signer certificate if this flag is set
-        signer.verify(p7, data_bio, SMIME.PKCS7_NOVERIFY)
+        if raw_sig:
+            signer.verify(p7, data_bio, SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_SIGNED)
+        else:
+            signer.verify(p7, data_bio, SMIME.PKCS7_NOVERIFY)
 
 
 def get_key_passphrase(self):

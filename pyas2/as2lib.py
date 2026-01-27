@@ -161,8 +161,10 @@ def save_message(message, payload, raw_payload):
                 try:
                     as2utils.verify_payload(as2utils.canonicalize2(payload), raw_sig, cert, ca_cert, verify_cert)
                 except Exception as e:
-                    raise as2utils.As2InvalidSignature(
-                        'Signature Verification Failed, exception message is {0}'.format(e))
+                    # Don't raise exception on verification failure, just log it
+                    #raise as2utils.As2InvalidSignature(
+                    #    'Signature Verification Failed, exception message is {0}'.format(e))
+                    pyas2init.logger.error('Signature Verification Failed, exception message is {0}'.format(e))
 
             mic_content = as2utils.canonicalize2(payload)
 
